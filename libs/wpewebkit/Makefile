@@ -21,6 +21,11 @@ include $(INCLUDE_DIR)/cmake.mk
 
 CMAKE_BINARY_SUBDIR:=openwrt-build
 
+# JavaScriptCore's baseline JIT on ARMv7 requires the hard-float ABI
+# (CPU(ARM_HARDFP) / __ARM_PCS_VFP); soft-float arm_v7 targets must use
+# the C_LOOP interpreter instead.
+WPE_JIT:=$(if $(CONFIG_arm_v7),$(if $(CONFIG_SOFT_FLOAT),,y))$(CONFIG_aarch64)$(CONFIG_riscv64)$(CONFIG_x86_64)
+
 CMAKE_OPTIONS += \
 	-DBWRAP_EXECUTABLE=/usr/bin/bwrap \
 	-DDBUS_PROXY_EXECUTABLE=/usr/bin/xdg-dbus-proxy \
@@ -39,8 +44,8 @@ CMAKE_OPTIONS += \
 	-DENABLE_SPELLCHECK=OFF \
 	-DENABLE_SPEECH_SYNTHESIS=OFF \
 	-DENABLE_TOUCH_EVENTS=ON \
-	-DENABLE_JIT=$(if $(CONFIG_arm_v7)$(CONFIG_aarch64)$(CONFIG_riscv64)$(CONFIG_x86_64),ON,OFF) \
-	-DENABLE_C_LOOP=$(if $(CONFIG_arm_v7)$(CONFIG_aarch64)$(CONFIG_riscv64)$(CONFIG_x86_64),OFF,ON) \
+	-DENABLE_JIT=$(if $(WPE_JIT),ON,OFF) \
+	-DENABLE_C_LOOP=$(if $(WPE_JIT),OFF,ON) \
 	-DENABLE_WEBGL=ON \
 	-DENABLE_VIDEO=ON \
 	-DPORT=WPE \
